@@ -106,11 +106,10 @@ function TransgressionMap({ transgressions = { features: [] } }) {
       if (!coords) return;
 
       // Build a single HTML string for the popup
-      // Build a single HTML string for the popup
       const srcURL = import.meta.env.VITE_PHOTOS_URL;
       const photoId = t.properties?.photoIDs;
       // Use hosted photos if configured and photoId present, else fallback to public placeholder
-      const placeholderPath = "/images/placeholder.jpg"; // put this file in public/images/
+      const placeholderPath = "/images/placeholder.jpg";
       const imgSrc =
         srcURL && photoId
           ? `${srcURL}/${encodeURIComponent(photoId)}.jpg`
