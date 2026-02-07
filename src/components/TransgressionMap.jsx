@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import mapboxgl from "mapbox-gl";
 import { useGeolocated } from "react-geolocated";
 import "mapbox-gl/dist/mapbox-gl.css";
+import DOMPurify from "dompurify";
 
 const INITIAL_CENTER = [-74.0242, 40.6941];
 const INITIAL_ZOOM = 11.12;
@@ -121,9 +122,13 @@ function TransgressionMap({ transgressions = { features: [] } }) {
         </section>
       `;
 
+      const sanitizedPopupHtml = DOMPurify.sanitize(popupHtml, {
+        ALLOWED_TAGS: ["section", "img", "p"],
+      });
+
       const marker = new mapboxgl.Marker({ color: "black", rotation: 45 })
         .setLngLat(coords)
-        .setPopup(new mapboxgl.Popup().setHTML(popupHtml))
+        .setPopup(new mapboxgl.Popup().setHTML(sanitizedPopupHtml))
         .addTo(mapRef.current);
 
       markersRef.current.push(marker);
