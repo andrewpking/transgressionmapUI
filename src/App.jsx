@@ -10,8 +10,7 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  // Load once on mount. The loader uses a module-level cache so repeated mounts/re-renders
-  // won't start duplicate requests.
+  // Load once on mount with module level cache
   useEffect(() => {
     let mounted = true;
     setLoading(true);
