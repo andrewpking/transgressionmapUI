@@ -8,6 +8,14 @@ const INITIAL_CENTER = [-74.0242, 40.6941];
 const INITIAL_ZOOM = 11.12;
 
 function TransgressionMap({ transgressions = { features: [] } }) {
+  let style = "mapbox://styles/mapbox/light-v11";
+  const darkModeMql =
+    window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)");
+
+  if (darkModeMql && darkModeMql.matches) {
+    style = "mapbox://styles/mapbox/dark-v11";
+  }
+
   const mapRef = useRef(null);
   const mapContainerRef = useRef(null);
   const markersRef = useRef([]);
@@ -72,6 +80,7 @@ function TransgressionMap({ transgressions = { features: [] } }) {
       container: mapContainerRef.current,
       center,
       zoom,
+      style: style,
     });
 
     const onMove = () => {

@@ -13,6 +13,17 @@
     -moz-osx-font-smoothing: grayscale;
 }
 
+main .mapboxgl-popup-content {
+    background-color: rgba(99, 99, 150, 0.87);
+    border-radius: 8px;
+    padding: 10px;
+}
+
+main .mapboxgl-popup-close-button {
+    color: mediumaquamarine;
+    font-size: 1.5em;
+}
+
 a {
     font-weight: 500;
     color: #646cff;
