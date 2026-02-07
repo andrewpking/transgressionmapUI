@@ -27,6 +27,37 @@ function TransgressionMap({ transgressions = { features: [] } }) {
       // If map already exists, update its viewport without reinitializing
       if (mapRef.current) {
         mapRef.current.setCenter(newCenter);
+        mapRef.current.addSource("center", {
+          type: "geojson",
+          data: {
+            type: "FeatureCollection",
+            features: [
+              {
+                type: "Feature",
+                geometry: {
+                  type: "Point",
+                  coordinates: newCenter,
+                },
+              },
+            ],
+          },
+        });
+        mapRef.current.addLayer({
+          id: "locationOrb",
+          type: "circle",
+          source: "center",
+          paint: { "circle-radius": 8, "circle-color": "#ff0000" },
+        });
+        mapRef.current.addLayer({
+          id: "locationOrbOutline",
+          type: "circle",
+          source: "center",
+          paint: {
+            "circle-radius": 12,
+            "circle-color": "#ffffff",
+            "circle-opacity": 0.5,
+          },
+        });
       }
     }
   }, [coords, isGeolocationAvailable, isGeolocationEnabled]);
