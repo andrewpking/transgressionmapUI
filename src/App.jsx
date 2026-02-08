@@ -1,63 +1,80 @@
-import { useRef, useEffect } from "react";
-import mapboxgl from "mapbox-gl";
-import { useGeolocated } from "react-geolocated";
-import loadTransgressions from "./componenents/loadData";
-// import getToken from "./componenents/getToken";
-import "mapbox-gl/dist/mapbox-gl.css";
+import { useState, useEffect } from "react";
+import loadTransgressions, {
+  clearTransgressionsCache,
+} from "./components/loadData";
+import TransgressionMap from "./components/TransgressionMap";
 import "./App.css";
 
 function App() {
-  const mapRef = useRef();
-  const mapContainerRef = useRef();
-  const { coords, isGeolocationAvailable, isGeolocationEnabled } =
-    useGeolocated({
-      positionOptions: {
-        enableHighAccuracy: false,
-      },
-      userDecisionTimeout: 5000,
-    });
+  const [transgressions, setTransgressions] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
-  // Determine center coordinates based on geolocation availability and coords
-  let center;
-  if (isGeolocationAvailable && isGeolocationEnabled && coords) {
-    center = [coords.longitude, coords.latitude];
-  } else {
-    center = [-74.0242, 40.6941]; // Fixed fallback point
-  }
-
+  // Load once on mount with module level cache
   useEffect(() => {
-    mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN;
-    mapRef.current = new mapboxgl.Map({
-      container: mapContainerRef.current,
-      center: center,
-      zoom: 11.12,
-    });
-
-    loadTransgressions().then((data) => {
-      const transgressions = data;
-      // Add transgressions to map
-      transgressions.features.forEach((transgression) => {
-        console.log(transgression);
-        new mapboxgl.Marker({ color: "black", rotation: 45 })
-          .setLngLat(transgression.geometry.coordinates)
-          .setPopup(
-            new mapboxgl.Popup()
-              .setHTML(
-                `<img src="https://example.com/${transgression.properties.photoIDs}.jpg" alt="Image" />`,
-                `<p>${transgression.properties.description}</p>`,
-              )
-              .setText(`${transgression.properties.description}`), // TODO: Add image from server
-          )
-          .addTo(mapRef.current);
+    let mounted = true;
+    setLoading(true);
+    loadTransgressions()
+      .then((data) => {
+        if (!mounted) return;
+        setTransgressions(data);
+        setError(null);
+      })
+      .catch((err) => {
+        if (!mounted) return;
+        setError(err);
+      })
+      .finally(() => {
+        if (!mounted) return;
+        setLoading(false);
       });
-    });
 
-    return () => mapRef.current.remove();
-  }, [center]);
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  // Force a fresh fetch (bypasses the cached promise)
+  const handleRefresh = async () => {
+    setLoading(true);
+    try {
+      const data = await loadTransgressions({ force: true });
+      setTransgressions(data);
+      setError(null);
+    } catch (err) {
+      setError(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Alternative: clear the module cache and then load (same effect as force)
+  const handleClearCacheAndRefresh = async () => {
+    clearTransgressionsCache();
+    await handleRefresh();
+  };
 
   return (
     <>
-      <div id="map-container" ref={mapContainerRef} />
+      <header style={{ padding: 12 }}>
+        <button onClick={handleRefresh} disabled={loading}>
+          {loading ? "Refreshing..." : "Refresh"}
+        </button>
+        <button
+          onClick={handleClearCacheAndRefresh}
+          disabled={loading}
+          style={{ marginLeft: 8 }}
+        >
+          Clear Cache & Refresh
+        </button>
+        {error && (
+          <p style={{ color: "red", marginLeft: 12 }}>Error: {String(error)}</p>
+        )}
+      </header>
+
+      <main style={{ height: "calc(100vh - 56px)" }}>
+        <TransgressionMap transgressions={transgressions} />
+      </main>
     </>
   );
 }
